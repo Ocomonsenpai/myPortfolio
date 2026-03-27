@@ -1,146 +1,136 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { CustomEase } from "gsap/all";
 import "./index.css";
 
 const Loader = () => {
+  const rootRef = useRef(null);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const root = rootRef.current;
+    if (!root) return;
+
+    let cancelled = false;
+
     gsap.registerPlugin(CustomEase);
     CustomEase.create("counterEase", "0.9, 0, 0.1, 1");
-    CustomEase.create("hop", "0.175, 0.885, 0.32, 1");
 
-    // Initial hero background scale
-    gsap.set(".hero-bg", { scale: 1.25 });
+    const ctx = gsap.context(() => {
+      const textPaths = root.querySelectorAll("svg textPath");
+      if (textPaths.length) {
+        const startTextLengths = Array.from(textPaths).map((tp) =>
+          parseFloat(tp.getAttribute("textLength") || "0")
+        );
+        const startTextOffsets = Array.from(textPaths).map((tp) =>
+          parseFloat(tp.getAttribute("startOffset") || "0")
+        );
 
-    // Orbit text path animations
-    const textPaths = document.querySelectorAll(".loader svg textPath");
-    if (textPaths.length) {
-      const startTextLengths = Array.from(textPaths).map((tp) =>
-        parseFloat(tp.getAttribute("textLength") || "0")
-      );
-      const startTextOffsets = Array.from(textPaths).map((tp) =>
-        parseFloat(tp.getAttribute("startOffset") || "0")
-      );
+        const targetTextLengths = [4000, 3500, 3250, 3000, 2500, 2000, 1500, 1250];
+        const orbitRadii = [775, 700, 625, 550, 475, 400, 325, 250];
+        const maxOrbitRadius = orbitRadii[0];
 
-      const targetTextLengths = [4000, 3500, 3250, 3000, 2500, 2000, 1500, 1250];
-      const orbitRadii = [775, 700, 625, 550, 475, 400, 325, 250];
-      const maxOrbitRadius = orbitRadii[0];
+        textPaths.forEach((textPath, index) => {
+          const animationDelay = (textPaths.length - 1 - index) * 0.1;
+          const currentOrbitRadius = orbitRadii[index];
+          const currentDuration =
+            1 + (currentOrbitRadius / maxOrbitRadius) * 0.25;
+          const pathLength = 2 * Math.PI * currentOrbitRadius;
+          const textLengthIncrease =
+            targetTextLengths[index] - startTextLengths[index];
+          const offsetAdjustment =
+            (textLengthIncrease / 2 / pathLength) * 100;
+          const targetOffset =
+            startTextOffsets[index] - offsetAdjustment;
 
-      textPaths.forEach((textPath, index) => {
-        const animationDelay = (textPaths.length - 1 - index) * 0.1;
-        const currentOrbitRadius = orbitRadii[index];
-        const currentDuration =
-          1 + (currentOrbitRadius / maxOrbitRadius) * 0.25;
-        const pathLength = 2 * Math.PI * currentOrbitRadius;
-        const textLengthIncrease =
-          targetTextLengths[index] - startTextLengths[index];
-        const offsetAdjustment =
-          (textLengthIncrease / 2 / pathLength) * 100;
-        const targetOffset =
-          startTextOffsets[index] - offsetAdjustment;
-
-        gsap.to(textPath, {
-          attr: {
-            textLength: targetTextLengths[index],
-            startOffset: targetOffset + "%",
-          },
-          duration: currentDuration,
-          ease: "power2.inOut",
-          delay: animationDelay,
-          yoyo: true,
-          repeat: -1,
-          repeatDelay: 0,
+          gsap.to(textPath, {
+            attr: {
+              textLength: targetTextLengths[index],
+              startOffset: targetOffset + "%",
+            },
+            duration: currentDuration,
+            ease: "power2.inOut",
+            delay: animationDelay,
+            yoyo: true,
+            repeat: -1,
+            repeatDelay: 0,
+          });
         });
-      });
-    }
+      }
 
-    // SVG spin
-    let loaderRotation = 0;
-    gsap.set(".loader svg", { transformOrigin: "50% 50%" });
+      let loaderRotation = 0;
+      const svg = root.querySelector("svg");
+      if (svg) gsap.set(svg, { transformOrigin: "50% 50%" });
 
-    function animateLoader() {
-      const dir = Math.random() < 0.5 ? 1 : -1;
-      loaderRotation += 25 * dir;
-      gsap.to(".loader svg", {
-        rotation: loaderRotation,
-        duration: 1,
-        ease: "power2.inOut",
-        onComplete: animateLoader,
-      });
-    }
+      function animateLoader() {
+        if (cancelled || !svg) return;
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        loaderRotation += 25 * dir;
+        gsap.to(svg, {
+          rotation: loaderRotation,
+          duration: 1,
+          ease: "power2.inOut",
+          onComplete: () => {
+            if (!cancelled) animateLoader();
+          },
+        });
+      }
 
-    animateLoader();
+      animateLoader();
 
-    // Counter
-    const counterText = document.querySelector(".counter p");
-    const count = { value: 0 };
+      const counterText = root.querySelector(".counter p");
+      const count = { value: 0 };
 
-    if (counterText) {
-      gsap.to(count, {
-        value: 100,
-        duration: 5,
-        ease: "counterEase",
-        onUpdate() {
-          counterText.textContent = Math.floor(count.value).toString();
-        },
-      });
-    }
+      if (counterText) {
+        gsap.to(count, {
+          value: 100,
+          duration: 5,
+          ease: "counterEase",
+          onUpdate() {
+            counterText.textContent = Math.floor(count.value).toString();
+          },
+        });
+      }
 
-    // Orbit text fade in → out → hero reveal (total ~7s)
-    const orbitTextElements = document.querySelectorAll(".orbit-text");
-    if (orbitTextElements.length) {
-      gsap.set(orbitTextElements, { opacity: 0 });
+      const orbitTextElements = root.querySelectorAll(".orbit-text");
+      if (orbitTextElements.length) {
+        gsap.set(orbitTextElements, { opacity: 0 });
 
-      const orbitTextReversed = Array.from(orbitTextElements).reverse();
+        const orbitTextReversed = Array.from(orbitTextElements).reverse();
 
-      gsap.to(orbitTextReversed, {
-        opacity: 1,
-        duration: 0.75,
-        stagger: 0.125,
-        ease: "power2.out",
-      });
+        gsap.to(orbitTextReversed, {
+          opacity: 1,
+          duration: 0.75,
+          stagger: 0.125,
+          ease: "power2.out",
+        });
 
-      gsap.to(orbitTextReversed, {
-        opacity: 0,
-        duration: 0.75,
-        stagger: 0.1,
-        delay: 5.25,
-        ease: "power2.out",
-        onComplete() {
-          gsap.to(".loader", {
-            opacity: 0,
-            duration: 1,
-          });
-          gsap.to(".hero-bg", {
-            scale: 1,
-            duration: 2,
-            delay: 0.5,
-            ease: "hop",
-          });
-          gsap.fromTo(
-            ".hero-copy p",
-            { y: "110%", opacity: 0 },
-            {
-              y: 0,
-              opacity: 1,
-              duration: 1.5,
-              delay: 0.75,
-              ease: "hop",
-            }
-          );
-        },
-      });
-    }
+        gsap.to(orbitTextReversed, {
+          opacity: 0,
+          duration: 0.75,
+          stagger: 0.1,
+          delay: 5.25,
+          ease: "power2.out",
+          onComplete() {
+            if (cancelled) return;
+            gsap.to(root, {
+              opacity: 0,
+              duration: 1,
+            });
+          },
+        });
+      }
+    }, root);
 
     return () => {
-      gsap.globalTimeline.clear();
+      cancelled = true;
+      ctx.revert();
     };
   }, []);
 
   return (
-    <div className="loader">
+    <div className="loader" ref={rootRef}>
       <svg viewBox="-425 -425 1850 1850" xmlns="http://www.w3.org/2000/svg">
         <path id="loader-orbit-1" d="M 500, -275 a 775,775 0 1,0 0.1,0" />
         <path id="loader-orbit-2" d="M 500, -200 a 700,700 0 1,0 0.1,0" />
