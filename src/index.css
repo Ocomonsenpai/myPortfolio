@@ -85,6 +85,14 @@
     
     .container3D {
         width: 100%;
+        min-height: 100vh;
+        flex: 1 1 auto;
+        position: relative;
+        z-index: 0;
+    }
+
+    .container3D canvas {
+        display: block;
     }
     
     .quote {
@@ -430,15 +438,20 @@
     
     .fNavbar_link a {
         text-decoration: none;
+        color: inherit;
     }
     
     .fNavbar_link {
-        color: var(--base-300);
-        font-size: 20px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: clamp(11px, 1.5vw, 14px);
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 6rem;
+        flex-wrap: wrap;
+        gap: clamp(1.25rem, 6vw, 4.5rem);
     }
     
     .info {
@@ -447,35 +460,92 @@
         justify-content: center;
         flex-direction: column;
         margin: 4rem 0;
+        text-align: center;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
     }
     
     .f-name {
-        font-size: 5rem;
+        font-size: clamp(2.5rem, 8vw, 5rem);
         font-weight: 900;
+        letter-spacing: 0.02em;
+        color: #fff;
+        margin: 0;
+        line-height: 1.05;
     }
     
     .social {
         display: flex;
-        gap: 20rem;
-        margin: 2rem;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: clamp(2rem, 12vw, 6rem);
+        margin: 1.75rem 0 1.5rem;
+    }
+
+    .social a {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: clamp(12px, 1.8vw, 15px);
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
         text-decoration: underline;
+        text-underline-offset: 0.2em;
     }
     
     .email {
-        font-size: 2rem;
+        font-size: clamp(1rem, 2.8vw, 1.75rem);
         font-weight: 500;
-        margin-bottom: 2rem;
+        margin: 0 0 2.5rem;
+        color: rgba(255, 255, 255, 0.95);
+    }
+   
+
+    .email-label {
+        font-weight: 700;
     }
     
     .email a {
         text-decoration: underline;
+        text-underline-offset: 0.15em;
+        color: inherit;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .email :hover,
+    .email :focus-visible {
+        color: #7a7a7a;
     }
     
     .ft-text {
-        font-weight: 500;
-        font-size: 7rem;
-        color: grey;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: #7a7a7a;
+        margin: 0;
+        line-height: 1;
+        white-space: nowrap;
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        align-self: stretch;
+        box-sizing: border-box;
+        padding: 0;
+        overflow: visible;
+        /* Fallback: cap by viewport so wide monitors don’t blow past the contact column */
+        font-size: min(5.25rem, max(0.5rem, calc((min(100vw, 1080px) - 3.5rem) / 19)));
     }
+
+    @container contact (min-width: 0) {
+        .ft-text {
+            font-size: min(4.25rem, max(0.5rem, calc((100cqi - 2.5rem) / 19)));
+        }
+    }
+
+
     /*ABOUTME PAGE*/
     
     .aboutPage {
@@ -595,6 +665,9 @@
         margin: 0 auto;
         padding: 3rem clamp(1rem, 4vw, 2rem) 4rem;
         box-sizing: border-box;
+        min-width: 0;
+        container-type: inline-size;
+        container-name: contact;
     }
 
     .right-text .aboutProse {
@@ -1139,10 +1212,6 @@
 
         .f-name {
             font-size: clamp(2rem, 10vw, 3.5rem);
-        }
-
-        .ft-text {
-            font-size: clamp(2rem, 12vw, 4rem);
         }
 
         .email {

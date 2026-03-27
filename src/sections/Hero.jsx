@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import gsap from "gsap";
+import { preloadAsteroidGltf } from "../asteroidPreload.js";
 import { CustomEase } from "gsap/all";
 
 const Hero = () => {
@@ -69,42 +69,26 @@ const Hero = () => {
     directionalLight.position.set(-100, 100, 100);
     scene.add(directionalLight);
 
-    const loader = new GLTFLoader();
-    loader.load(
-      "/asteriod.glb",
-      (gltf) => {
+    let cancelled = false;
+    preloadAsteroidGltf()
+      .then((gltf) => {
+        if (cancelled || !container) return;
+
         asteriod = gltf.scene;
-
-        const box = new THREE.Box3().setFromObject(asteriod);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-
-        // Center model at origin
-        asteriod.position.sub(center);
-
-        const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) {
-          const scale = 4 / maxDim; // adjust size here
-          asteriod.scale.setScalar(scale);
+        if (asteriod.parent) {
+          asteriod.parent.remove(asteriod);
         }
 
         if (gltf.animations && gltf.animations.length > 0) {
           mixer = new THREE.AnimationMixer(asteriod);
-          const action = mixer.clipAction(gltf.animations[0]);
-          action.play();
+          mixer.clipAction(gltf.animations[0]).play();
         }
 
-        // Center object at origin so it sits in middle of view
-        asteriod.position.set(0, 0, 20);
         scene.add(asteriod);
-      },
-      undefined,
-      (error) => {
-        console.error("Error loading GLB:", error);
-      }
-    );
+      })
+      .catch((error) => {
+        if (!cancelled) console.error("Error loading GLB:", error);
+      });
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -134,6 +118,9 @@ const Hero = () => {
     window.addEventListener("resize", resizeRenderer);
 
     return () => {
+      cancelled = true;
+      if (mixer) mixer.stopAllAction();
+      if (asteriod) scene.remove(asteriod);
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resizeRenderer);
       timer.dispose();
