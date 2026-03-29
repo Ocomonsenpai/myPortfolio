@@ -18,11 +18,11 @@ function prepareAsteroidTemplate(gltf) {
 
   const maxDim = Math.max(size.x, size.y, size.z);
   if (maxDim > 0) {
-    root.scale.setScalar(3.5 / maxDim);
+    root.scale.setScalar(3 / maxDim);
   }
 
   root.position.set(0, 0, 20);
-  return gltf;
+  return gltf;s
 }
 
 /**
