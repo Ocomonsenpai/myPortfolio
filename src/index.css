@@ -361,6 +361,16 @@
         opacity: 0.85;
     }
 
+    .projects .project-title-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .projects .project-title-link:hover {
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+    }
+
     /* Work section — mobile / touch */
     @media (max-width: 767px) {
         .project-p {

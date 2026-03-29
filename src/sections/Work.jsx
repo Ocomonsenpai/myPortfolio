@@ -4,6 +4,22 @@ import { projects } from './data.js';
 
 const MOBILE_QUERY = '(min-width: 768px)';
 
+function ProjectTitle({ name, url }) {
+    if (url) {
+        return (
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="project-title-link"
+            >
+                {name}
+            </a>
+        );
+    }
+    return name;
+}
+
 const Work = () => {
     const projectsListRef = useRef(null);
     const projectPreviewRef = useRef(null);
@@ -183,16 +199,22 @@ const Work = () => {
                         <div className="project" key={project.name}>
                             <div className="project-wrapper">
                                 <div className="project-name">
-                                    <h2 className="project-heading">{project.name}</h2>
+                                    <h2 className="project-heading">
+                                        <ProjectTitle name={project.name} url={project.url} />
+                                    </h2>
                                     <h2 className="project-heading project-heading--meta">{project.type}</h2>
                                 </div>
 
                                 <div className="project-hover" aria-hidden={!isDesktop}>
-                                    <h2 className="project-heading">{project.name}</h2>
+                                    <h2 className="project-heading">
+                                        <ProjectTitle name={project.name} url={project.url} />
+                                    </h2>
                                     <h2 className="project-heading project-heading--meta">{project.type}</h2>
                                 </div>
                                 <div className="project-name project-name--duplicate">
-                                    <h2 className="project-heading">{project.name}</h2>
+                                    <h2 className="project-heading">
+                                        <ProjectTitle name={project.name} url={project.url} />
+                                    </h2>
                                     <h2 className="project-heading project-heading--meta">{project.type}</h2>
                                 </div>
                             </div>
