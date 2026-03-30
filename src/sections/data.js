@@ -42,7 +42,7 @@ export const projects = [
     {
         name: "Ryan Tacaisan",
         type: "Portfilio",
-        url: "https://vercel.com/ocomonsenpais-projects/my-portfilio-v1-f5tu",
+        url: "https://my-portfilio-v1-f5tu.vercel.app/",
     },
 
 
