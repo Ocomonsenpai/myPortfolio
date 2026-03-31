@@ -4,22 +4,6 @@ import { projects } from './data.js';
 
 const MOBILE_QUERY = '(min-width: 768px)';
 
-function ProjectTitle({ name, url }) {
-    if (url) {
-        return (
-            <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="project-title-link"
-            >
-                {name}
-            </a>
-        );
-    }
-    return name;
-}
-
 const Work = () => {
     const projectsListRef = useRef(null);
     const projectPreviewRef = useRef(null);
@@ -195,31 +179,46 @@ const Work = () => {
                 aria-label="Projects and certifications"
             >
                 <div className="projects-list" ref={projectsListRef}>
-                    {projects.map((project) => (
-                        <div className="project" key={project.name}>
+                    {projects.map((project) => {
+                        const rowInner = (
                             <div className="project-wrapper">
                                 <div className="project-name">
-                                    <h2 className="project-heading">
-                                        <ProjectTitle name={project.name} url={project.url} />
-                                    </h2>
+                                    <h2 className="project-heading">{project.name}</h2>
                                     <h2 className="project-heading project-heading--meta">{project.type}</h2>
                                 </div>
 
                                 <div className="project-hover" aria-hidden={!isDesktop}>
-                                    <h2 className="project-heading">
-                                        <ProjectTitle name={project.name} url={project.url} />
-                                    </h2>
+                                    <h2 className="project-heading">{project.name}</h2>
                                     <h2 className="project-heading project-heading--meta">{project.type}</h2>
                                 </div>
                                 <div className="project-name project-name--duplicate">
-                                    <h2 className="project-heading">
-                                        <ProjectTitle name={project.name} url={project.url} />
-                                    </h2>
+                                    <h2 className="project-heading">{project.name}</h2>
                                     <h2 className="project-heading project-heading--meta">{project.type}</h2>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+
+                        if (project.url) {
+                            return (
+                                <a
+                                    key={project.name}
+                                    href={project.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="project project--link"
+                                    aria-label={`${project.name}: ${project.type} (opens in new tab)`}
+                                >
+                                    {rowInner}
+                                </a>
+                            );
+                        }
+
+                        return (
+                            <div className="project" key={project.name}>
+                                {rowInner}
+                            </div>
+                        );
+                    })}
                 </div>
             </section>
             <div className="project-preview" ref={projectPreviewRef} aria-hidden="true" />

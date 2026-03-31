@@ -14,7 +14,7 @@ export const projects = [
 
     {
         name: "Soul Type",
-        type: "Project"
+        type: "Project",
         url: "https://soul-type-i86jer6nh-ocomonsenpais-projects.vercel.app/",
     },
 
