@@ -344,11 +344,12 @@
         padding: 5px 15px;
         cursor: pointer;
         color: var(--base-100);
-        text-decoration: underline;
+        
     }
     
     .project-hover {
         color: var(--base-300);
+        text-decoration: underline;
     }
     
     .project-preview {
