@@ -110,6 +110,8 @@ const Work = () => {
         projectElements.forEach((project, index) => {
             const wrapper = project.querySelector('.project-wrapper');
             let currentPosition = POSITIONS.TOP;
+            const previewSrc =
+                projects[index]?.previewImage ?? `/img${index + 1}.png`;
 
             const handleMouseEnter = () => {
                 activeProject = project;
@@ -121,7 +123,7 @@ const Work = () => {
                 });
 
                 const img = document.createElement('img');
-                img.src = `/img${index + 1}.png`;
+                img.src = previewSrc;
                 img.alt = '';
                 img.style.position = 'absolute';
                 img.style.top = 0;

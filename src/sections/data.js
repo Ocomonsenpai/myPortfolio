@@ -32,12 +32,14 @@ export const projects = [
 
     {
         name: "Attendance payroll App",
-        type: "Project"
+        type: "Project",
+        previewImage: "/img6.png",
     },
 
     {
         name: "Library Management",
-        type: "Project"
+        type: "Project",
+        previewImage: "/img6.png",
     },
 
     {
