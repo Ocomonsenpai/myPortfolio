@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { motion } from "motion/react"
-import { Link } from 'react-router-dom';
+import React, { useState, useRef } from "react";
+import { motion } from "motion/react";
+import { Link } from "react-router-dom";
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';
 const NAV_LINKS = [
@@ -82,7 +82,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* MOBILE HAMBURGER BUTTON */}
+        {/* MOBILE VERSION BUTTON */}
         <button 
           onClick={() => setIsOpen(!isOpen)}
           className="md:hidden text-white p-2 focus:outline-none"
@@ -95,17 +95,18 @@ const Navbar = () => {
 
       {/* MOBILE MENU DROPDOWN */}
       {isOpen && (
-
-        <motion.div className="md:hidden  flex flex-col items-center py-6 space-y-6 animate-in slide-in-from-top duration-300"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        style ={{ maxHeight: "100vh"}}
-        transition = {{ duration: 1,}}>
+        <motion.div
+          className="md:hidden flex flex-col items-center py-6 space-y-6 animate-in slide-in-from-top duration-300"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          style={{ maxHeight: "100vh" }}
+          transition={{ duration: 1 }}
+        >
           {NAV_LINKS.map((link) => (
-            <Link 
+            <Link
               key={link.name}
               to={link.href}
-              onClick={() => setIsOpen(false)} // Close menu after clicking
+              onClick={() => setIsOpen(false)}
               className="text-sm font-mono tracking-widest text-white/70 hover:text-white"
             >
               {link.name}

@@ -3,33 +3,29 @@ import Contact from '../sections/Contact';
 
 const AboutMePage = () => {
     useEffect(() => {
-        const svgs = document.querySelectorAll('.circular_text svg');
+        const svgs = document.querySelectorAll(".circular_text svg");
         let rotation = 0;
-        let lastScroll = window.scrollY;
-        let ticking = false;
+        let lastScrollY = window.scrollY;
+        let scheduled = false;
 
-        const handleScroll = () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const delta = window.scrollY - lastScroll;
-                    lastScroll = window.scrollY;
-                    rotation += delta * 0.15;
+        const onScroll = () => {
+            if (scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(() => {
+                const delta = window.scrollY - lastScrollY;
+                lastScrollY = window.scrollY;
+                rotation += delta * 0.15;
 
-                    svgs.forEach((svg, i) => {
-                        const direction = i % 2 === 0 ? 1 : -1;
-                        svg.style.transform = `rotate(${rotation * direction}deg)`;
-                    });
-                    ticking = false;
+                svgs.forEach((svg, i) => {
+                    const direction = i % 2 === 0 ? 1 : -1;
+                    svg.style.transform = `rotate(${rotation * direction}deg)`;
                 });
-                ticking = true;
-            }
+                scheduled = false;
+            });
         };
 
-        window.addEventListener('scroll', handleScroll);
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
     return (

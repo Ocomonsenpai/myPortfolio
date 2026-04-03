@@ -1,67 +1,76 @@
+const TRAIL_LENGTH = 200;
+const FOLLOW_STRENGTH = 0.92;
+
+/**
+ * Full-screen cursor trail. Returns a cleanup function for React unmount.
+ */
 export function initCursorAnimation() {
-    // Create and configure the canvas element
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return () => {};
 
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.pointerEvents = 'none'; // Allow clicks to pass through
-    canvas.style.zIndex = '9999'; // Ensure it stays on top
+  Object.assign(canvas.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    zIndex: "9999",
+  });
+  document.body.appendChild(canvas);
 
-    document.body.appendChild(canvas);
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  window.addEventListener("resize", resize);
+  resize();
 
-    // Handle window resizing
-    const resize = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', resize);
-    resize();
+  const trail = Array.from({ length: TRAIL_LENGTH }, () => ({ x: 0, y: 0 }));
+  const mouse = {
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  };
 
-    // 1. Create trail dots array
-    const trail = [];
-    const COUNT = 200;
-    for (let i = 0; i < COUNT; i++) trail.push({ x: 0, y: 0 });
+  const onMouseMove = (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  };
+  document.addEventListener("mousemove", onMouseMove);
 
-    // 2. Track mouse position
-    let mouse = { x: 0, y: 0 };
+  let rafId = 0;
 
-    // Initialize mouse center to prevent trail from flying in from corner
-    mouse.x = window.innerWidth / 2;
-    mouse.y = window.innerHeight / 2;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    document.addEventListener('mousemove', e => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    });
+    trail[0].x += (mouse.x - trail[0].x) * FOLLOW_STRENGTH;
+    trail[0].y += (mouse.y - trail[0].y) * FOLLOW_STRENGTH;
 
-    // 3. Animate — each dot follows the one before it
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        trail[0].x += (mouse.x - trail[0].x) * 0.92;
-        trail[0].y += (mouse.y - trail[0].y) * 0.92;
-
-        for (let i = 1; i < COUNT; i++) {
-            trail[i].x += (trail[i - 1].x - trail[i].x) * 0.92;
-            trail[i].y += (trail[i - 1].y - trail[i].y) * 0.92;
-        }
-
-        trail.forEach((dot, i) => {
-            const t = i / COUNT;
-            const radius = 2 * (1 - t); // shrinks toward tail
-            const alpha = 1 - t; // fades toward tail
-            ctx.beginPath();
-            ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255,${alpha})`;
-            ctx.fill();
-        });
-
-        requestAnimationFrame(animate);
+    for (let i = 1; i < TRAIL_LENGTH; i++) {
+      trail[i].x += (trail[i - 1].x - trail[i].x) * FOLLOW_STRENGTH;
+      trail[i].y += (trail[i - 1].y - trail[i].y) * FOLLOW_STRENGTH;
     }
 
-    animate();
+    trail.forEach((dot, i) => {
+      const t = i / TRAIL_LENGTH;
+      const radius = 2 * (1 - t);
+      const alpha = 1 - t;
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fill();
+    });
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  rafId = requestAnimationFrame(tick);
+
+  return () => {
+    cancelAnimationFrame(rafId);
+    window.removeEventListener("resize", resize);
+    document.removeEventListener("mousemove", onMouseMove);
+    canvas.remove();
+  };
 }

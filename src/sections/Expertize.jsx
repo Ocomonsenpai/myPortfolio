@@ -1,32 +1,40 @@
+const SKILLS = [
+  "/UI/UX DESIGNER",
+  "/WEB DESIGN",
+  "/GRAPHIC DESIGN",
+  "/DEVELOPER",
+];
 
+const TECH = [
+  "HTML",
+  "CSS",
+  "JAVASCRIPT",
+  "PHP",
+  "C++",
+  "PHYTON",
+  "JAVA",
+  "SQL",
+  "NODE.JS",
+  "react.js",
+  "EXPRESS.JS",
+  "THREE.JS",
+  "MONGODB",
+];
 
-const Expertize = () => {
-    return (
-        <>
-            <div className="main">
-                <p>/UI/UX DESIGNER</p>
-                <p>/WEB DESIGN</p>
-                <p>/GRAPHIC DESIGN</p>
-                <p>/DEVELOPER</p>
-            </div>
+export default function Expertize() {
+  return (
+    <>
+      <div className="main">
+        {SKILLS.map((label) => (
+          <p key={label}>{label}</p>
+        ))}
+      </div>
 
-            <div className="tecnologies">
-                <p>HTML</p>
-                <p>CSS</p>
-                <p>JAVASCRIPT</p>
-                <p>PHP</p>
-                <p>C++</p>
-                <p>PHYTON</p>
-                <p>JAVA</p>
-                <p>SQL</p>
-                <p>NODE.JS</p>
-                <p>react.js</p>
-                <p>EXPRESS.JS</p>
-                <p>THREE.JS</p>
-                <p>MONGODB</p>
-            </div>
-        </>
-    );
-};
-
-export default Expertize;
+      <div className="tecnologies">
+        {TECH.map((name) => (
+          <p key={name}>{name}</p>
+        ))}
+      </div>
+    </>
+  );
+}

@@ -186,8 +186,6 @@ const Loader = () => {
       <div className="counter">
         <p>0</p>
       </div>
-
-     
     </div>
   );
 };

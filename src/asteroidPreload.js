@@ -1,3 +1,6 @@
+/**
+ * Loads the hero GLB once and applies a consistent scale / position before Hero mounts.
+ */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -22,7 +25,7 @@ function prepareAsteroidTemplate(gltf) {
   }
 
   root.position.set(0, 0, 20);
-  return gltf;s
+  return gltf;
 }
 
 /**

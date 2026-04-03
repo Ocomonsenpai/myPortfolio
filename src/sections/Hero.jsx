@@ -1,8 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
-import { preloadAsteroidGltf } from "../asteroidPreload.js";
 import { CustomEase } from "gsap/all";
+import { preloadAsteroidGltf } from "../asteroidPreload.js";
+
+const CAMERA_FOV = 19;
+const CAMERA_Z = 26;
+const NEAR = 0.1;
+const FAR = 1000;
 
 const Hero = () => {
   const containerRef = useRef(null);
@@ -23,10 +28,10 @@ const Hero = () => {
       ease: "hop",
     });
 
-    const copy = root.querySelector(".hero-copy p");
-    if (copy) {
+    const quote = root.querySelector(".hero-copy p");
+    if (quote) {
       gsap.fromTo(
-        copy,
+        quote,
         { y: "110%", opacity: 0 },
         {
           y: 0,
@@ -40,7 +45,7 @@ const Hero = () => {
 
     return () => {
       gsap.killTweensOf(root);
-      if (copy) gsap.killTweensOf(copy);
+      if (quote) gsap.killTweensOf(quote);
     };
   }, []);
 
@@ -50,56 +55,50 @@ const Hero = () => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      19,
+      CAMERA_FOV,
       window.innerWidth / window.innerHeight,
-      0.1,
-      1000
+      NEAR,
+      FAR
     );
-    camera.position.set(0, 0, 26);
+    camera.position.set(0, 0, CAMERA_Z);
 
-    let asteriod;
+    let asteroid;
     let mixer;
     const timer = new THREE.Timer();
     timer.connect(document);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
-    directionalLight.position.set(-100, 100, 100);
-    scene.add(directionalLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 5);
+    sun.position.set(-100, 100, 100);
+    scene.add(sun);
 
     let cancelled = false;
     preloadAsteroidGltf()
       .then((gltf) => {
         if (cancelled || !container) return;
 
-        asteriod = gltf.scene;
-        if (asteriod.parent) {
-          asteriod.parent.remove(asteriod);
-        }
+        asteroid = gltf.scene;
+        if (asteroid.parent) asteroid.parent.remove(asteroid);
 
-        if (gltf.animations && gltf.animations.length > 0) {
-          mixer = new THREE.AnimationMixer(asteriod);
+        if (gltf.animations?.length > 0) {
+          mixer = new THREE.AnimationMixer(asteroid);
           mixer.clipAction(gltf.animations[0]).play();
         }
 
-        scene.add(asteriod);
+        scene.add(asteroid);
       })
-      .catch((error) => {
-        if (!cancelled) console.error("Error loading GLB:", error);
+      .catch((err) => {
+        if (!cancelled) console.error("Error loading GLB:", err);
       });
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
 
     const resizeRenderer = () => {
-      const { clientWidth, clientHeight } = container;
-      const width = clientWidth || window.innerWidth;
-      const height = clientHeight || window.innerHeight;
-
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || window.innerHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
 
@@ -120,13 +119,12 @@ const Hero = () => {
     return () => {
       cancelled = true;
       if (mixer) mixer.stopAllAction();
-      if (asteriod) scene.remove(asteriod);
+      if (asteroid) scene.remove(asteroid);
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resizeRenderer);
       timer.dispose();
-      if (renderer.domElement && renderer.domElement.parentNode) {
-        renderer.domElement.parentNode.removeChild(renderer.domElement);
-      }
+      const el = renderer.domElement;
+      if (el?.parentNode) el.parentNode.removeChild(el);
       renderer.dispose();
     };
   }, []);
@@ -142,4 +140,3 @@ const Hero = () => {
 };
 
 export default Hero;
-
