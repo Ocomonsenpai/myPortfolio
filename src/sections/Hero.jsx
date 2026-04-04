@@ -133,7 +133,7 @@ const Hero = () => {
     <div className="layout" ref={layoutRef}>
       <div id="container3D" className="container3D" ref={containerRef} />
       <div className="quote hero-copy">
-        <p>minimalism is not emptiness its essence</p>
+        <p>The best preparation for tomorrow is doing your best today.</p>
       </div>
     </div>
   );
