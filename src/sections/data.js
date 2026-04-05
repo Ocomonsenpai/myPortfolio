@@ -34,9 +34,18 @@ export const projects = [
     type: "Project",
     previewImage: "/img6.png",
   },
+
+  {
+    name: "Trading Indicator",
+    type: "Project",
+    url: "https://www.tradingview.com/script/8WpC9IZf-Buy-on-Rally-Sell-on-Rally/",
+    previewImage: "/img9.png",
+  },
+  
   {
     name: "Ryan Tacaisan",
-    type: "Portfilio",
+    type: "Portfolio",
     url: "https://my-portfilio-v1-f5tu.vercel.app/",
   },
+
 ];
