@@ -46,6 +46,7 @@ export const projects = [
     name: "Ryan Tacaisan",
     type: "Portfolio",
     url: "https://my-portfilio-v1-f5tu.vercel.app/",
+    previewImage: "/img8.png",
   },
 
 ];
