@@ -8,46 +8,41 @@ const CAMERA_FOV = 19;
 const CAMERA_Z = 26;
 const NEAR = 0.1;
 const FAR = 1000;
+const ARRIVAL_DELAY_SECONDS = 0.5;
 
-const Hero = () => {
+const Hero = ({ introReady = true }) => {
   const containerRef = useRef(null);
   const layoutRef = useRef(null);
+  const renderReadyRef = useRef(introReady);
 
   useEffect(() => {
     const root = layoutRef.current;
     if (!root) return;
+    renderReadyRef.current = introReady;
 
-    gsap.registerPlugin(CustomEase);
-    CustomEase.create("hop", "0.175, 0.885, 0.32, 1");
+    const quote = root.querySelector(".hero-statement");
+    const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reducedMotion) {
+        gsap.set(root, { scale: 1, opacity: 1 });
+        if (quote) gsap.set(quote, { yPercent: 0, opacity: 1 });
+        return;
+      }
 
-    gsap.set(root, { scale: 1.25 });
-    gsap.to(root, {
-      scale: 1,
-      duration: 2,
-      delay: 0.5,
-      ease: "hop",
-    });
+      gsap.registerPlugin(CustomEase);
+      CustomEase.create("hop", "0.175, 0.885, 0.32, 1");
+      gsap.set(root, { scale: 1, opacity: 0 });
+      if (quote) gsap.set(quote, { yPercent: 110, opacity: 0 });
+      if (!introReady) return;
 
-    const quote = root.querySelector(".hero-copy p");
-    if (quote) {
-      gsap.fromTo(
-        quote,
-        { y: "110%", opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1.5,
-          delay: 0.75,
-          ease: "hop",
-        }
-      );
-    }
+      gsap.set(root, { opacity: 1 });
+      if (quote) {
+        gsap.to(quote, { yPercent: 0, opacity: 1, duration: 0.9, delay: 0.95 + ARRIVAL_DELAY_SECONDS, ease: "hop" });
+      }
+    }, root);
 
-    return () => {
-      gsap.killTweensOf(root);
-      if (quote) gsap.killTweensOf(quote);
-    };
-  }, []);
+    return () => ctx.revert();
+  }, [introReady]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -64,6 +59,12 @@ const Hero = () => {
 
     let asteroid;
     let mixer;
+    let arrivalTimeline;
+    let arrivalStarted = false;
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const arrival = new THREE.Group();
+    const previousFilter = container.style.filter;
+    scene.add(arrival);
     const timer = new THREE.Timer();
     timer.connect(document);
 
@@ -85,7 +86,23 @@ const Hero = () => {
           mixer.clipAction(gltf.animations[0]).play();
         }
 
-        scene.add(asteroid);
+        arrival.add(asteroid);
+        if (!motionPreference.matches) {
+          // Keep the cached model's resting transform intact while it exits hyperspace.
+          const approachDepth = 155;
+          const approachDistance = CAMERA_Z - asteroid.position.z + approachDepth;
+          const approachX = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2)) * approachDistance * camera.aspect * 0.55;
+          arrival.position.set(approachX, 3.5, -approachDepth);
+          arrivalTimeline = gsap.timeline({
+            paused: true,
+            onComplete: () => { container.style.filter = previousFilter; },
+          })
+            .to(arrival.position, { x: 0, y: 0, z: 0.12, duration: 0.2, ease: "expo.in" }, 0.68 + ARRIVAL_DELAY_SECONDS)
+            .to(arrival.position, { z: 0, duration: 0.24, ease: "power2.out" }, 0.88 + ARRIVAL_DELAY_SECONDS)
+            .fromTo(container, { filter: "blur(0px)" }, { filter: "blur(5px)", duration: 0.04, ease: "power2.in" }, 0.8 + ARRIVAL_DELAY_SECONDS)
+            .to(container, { filter: "blur(0px)", duration: 0.09, ease: "power2.out" }, 0.86 + ARRIVAL_DELAY_SECONDS);
+        }
+        if (!renderReadyRef.current) renderer.render(scene, camera);
       })
       .catch((err) => {
         if (!cancelled) console.error("Error loading GLB:", err);
@@ -109,17 +126,39 @@ const Hero = () => {
     const animate = (time) => {
       frameId = requestAnimationFrame(animate);
       timer.update(time);
-      if (mixer) mixer.update(0.001);
-      renderer.render(scene, camera);
+      if (renderReadyRef.current) {
+        if (arrivalTimeline && !arrivalStarted) {
+          arrivalStarted = true;
+          if (motionPreference.matches) {
+            arrivalTimeline.progress(1).pause();
+          } else {
+            arrivalTimeline.play(0);
+          }
+        }
+        if (mixer) mixer.update(0.001);
+        renderer.render(scene, camera);
+      }
     };
     animate();
 
+    const onMotionChange = () => {
+      if (!motionPreference.matches) return;
+      arrivalStarted = true;
+      arrivalTimeline?.progress(1).pause();
+      arrival.position.set(0, 0, 0);
+      container.style.filter = previousFilter;
+    };
+    motionPreference.addEventListener("change", onMotionChange);
     window.addEventListener("resize", resizeRenderer);
 
     return () => {
       cancelled = true;
+      arrivalTimeline?.kill();
+      motionPreference.removeEventListener("change", onMotionChange);
+      container.style.filter = previousFilter;
       if (mixer) mixer.stopAllAction();
-      if (asteroid) scene.remove(asteroid);
+      if (asteroid) arrival.remove(asteroid);
+      scene.remove(arrival);
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resizeRenderer);
       timer.dispose();
@@ -133,7 +172,11 @@ const Hero = () => {
     <div className="layout" ref={layoutRef}>
       <div id="container3D" className="container3D" ref={containerRef} />
       <div className="quote hero-copy">
-        <p>The best preparation for tomorrow is doing your best today.</p>
+        <h1 className="hero-statement max-w-5xl">
+          <span className="hero-statement-line">I design and build</span>{" "}
+          <span className="hero-statement-line">intuitive digital</span>{" "}
+          <span className="hero-statement-line">experiences.</span>
+        </h1>
       </div>
     </div>
   );

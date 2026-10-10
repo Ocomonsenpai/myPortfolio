@@ -1,0 +1,4 @@
+Technology logos from Devicon v2.17.0: https://github.com/devicons/devicon
+Distributed under the MIT license in DEVICON-LICENSE.txt.
+Brand names and logos belong to their respective owners.
+SQL uses a custom generic database symbol.

@@ -2,8 +2,9 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { CustomEase } from "gsap/all";
 import "./index.css";
+import { LOADER_DURATION_MS } from "./constants.js";
 
-const Loader = () => {
+const Loader = ({ onHandoff, onComplete }) => {
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -12,14 +13,15 @@ const Loader = () => {
     const root = rootRef.current;
     if (!root) return;
 
-    let cancelled = false;
-
     gsap.registerPlugin(CustomEase);
     CustomEase.create("counterEase", "0.9, 0, 0.1, 1");
 
     const ctx = gsap.context(() => {
+      const duration = LOADER_DURATION_MS / 1000;
+      const handoffTime = duration - 0.35;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const textPaths = root.querySelectorAll("svg textPath");
-      if (textPaths.length) {
+      if (textPaths.length && !reducedMotion) {
         const startTextLengths = Array.from(textPaths).map((tp) =>
           parseFloat(tp.getAttribute("textLength") || "0")
         );
@@ -32,10 +34,10 @@ const Loader = () => {
         const maxOrbitRadius = orbitRadii[0];
 
         textPaths.forEach((textPath, index) => {
-          const animationDelay = (textPaths.length - 1 - index) * 0.1;
+          const animationDelay = (textPaths.length - 1 - index) * 0.035;
           const currentOrbitRadius = orbitRadii[index];
           const currentDuration =
-            1 + (currentOrbitRadius / maxOrbitRadius) * 0.25;
+            0.6 + (currentOrbitRadius / maxOrbitRadius) * 0.2;
           const pathLength = 2 * Math.PI * currentOrbitRadius;
           const textLengthIncrease =
             targetTextLengths[index] - startTextLengths[index];
@@ -59,38 +61,42 @@ const Loader = () => {
         });
       }
 
-      let loaderRotation = 0;
       const svg = root.querySelector("svg");
-      if (svg) gsap.set(svg, { transformOrigin: "50% 50%" });
-
-      function animateLoader() {
-        if (cancelled || !svg) return;
-        const dir = Math.random() < 0.5 ? 1 : -1;
-        loaderRotation += 25 * dir;
+      if (svg && !reducedMotion) {
         gsap.to(svg, {
-          rotation: loaderRotation,
-          duration: 1,
+          transformOrigin: "50% 50%",
+          rotation: 25,
+          duration: 0.65,
           ease: "power2.inOut",
-          onComplete: () => {
-            if (!cancelled) animateLoader();
-          },
+          repeat: -1,
+          yoyo: true,
         });
       }
 
-      animateLoader();
-
       const counterText = root.querySelector(".counter p");
       const count = { value: 0 };
+      let handoffStarted = false;
+      const backdropFade = gsap.to(root.querySelector(".loader-backdrop"), {
+        opacity: 0,
+        duration: 0.35,
+        ease: "power2.inOut",
+        paused: true,
+      });
+      const timeline = gsap.timeline({ onComplete });
 
       if (counterText) {
-        gsap.to(count, {
+        timeline.to(count, {
           value: 100,
-          duration: 5,
+          duration: handoffTime,
           ease: "counterEase",
           onUpdate() {
             counterText.textContent = Math.floor(count.value).toString();
+            if (!handoffStarted && count.value >= 50) {
+              handoffStarted = true;
+              if (onHandoff()) backdropFade.play();
+            }
           },
-        });
+        }, 0);
       }
 
       const orbitTextElements = root.querySelectorAll(".orbit-text");
@@ -99,38 +105,31 @@ const Loader = () => {
 
         const orbitTextReversed = Array.from(orbitTextElements).reverse();
 
-        gsap.to(orbitTextReversed, {
+        timeline.to(orbitTextReversed, {
           opacity: 1,
-          duration: 0.75,
-          stagger: 0.125,
+          duration: 0.35,
+          stagger: reducedMotion ? 0 : 0.045,
           ease: "power2.out",
-        });
+        }, 0);
 
-        gsap.to(orbitTextReversed, {
+        timeline.to(orbitTextReversed, {
           opacity: 0,
-          duration: 0.75,
-          stagger: 0.1,
-          delay: 5.25,
+          duration: 0.32,
+          stagger: reducedMotion ? 0 : 0.03,
           ease: "power2.out",
-          onComplete() {
-            if (cancelled) return;
-            gsap.to(root, {
-              opacity: 0,
-              duration: 1,
-            });
-          },
-        });
+        }, handoffTime - 0.2);
       }
+      timeline.to(root, { opacity: 0, duration: 0.35, ease: "power2.inOut" }, handoffTime);
     }, root);
 
     return () => {
-      cancelled = true;
       ctx.revert();
     };
-  }, []);
+  }, [onHandoff, onComplete]);
 
   return (
     <div className="loader" ref={rootRef}>
+      <div className="loader-backdrop" aria-hidden="true" />
       <svg viewBox="-425 -425 1850 1850" xmlns="http://www.w3.org/2000/svg">
         <path id="loader-orbit-1" d="M 500, -275 a 775,775 0 1,0 0.1,0" />
         <path id="loader-orbit-2" d="M 500, -200 a 700,700 0 1,0 0.1,0" />

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { motion } from "motion/react";
+import React, { useEffect, useState, useRef } from "react";
+import { motion as Motion, useReducedMotion } from "motion/react";
 import { Link } from "react-router-dom";
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';
@@ -12,11 +12,40 @@ const NAV_LINKS = [
 
 const Navbar = () => {
   const [nameText, setNameText] = useState('RYAN TACAISAN');
-  const [isOpen, setIsOpen] = useState(false); // Mobile menu state
+  const [isOpen, setIsOpen] = useState(false);
   const nameRef = useRef(null);
   const rafRef = useRef(null);
+  const menuButtonRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 768px)");
+    const closeOnDesktop = (event) => {
+      if (event.matches) setIsOpen(false);
+    };
+
+    desktopQuery.addEventListener("change", closeOnDesktop);
+    return () => {
+      desktopQuery.removeEventListener("change", closeOnDesktop);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      menuButtonRef.current?.focus();
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isOpen]);
 
   const handleScramble = () => {
+    if (reduceMotion) return;
     const original = 'RYAN TACAISAN';
     let frame = 0;
     const totalFrames = original.length * 3;
@@ -47,12 +76,28 @@ const Navbar = () => {
     nameRef.current.style.setProperty('--y', `${y}%`);
   };
 
+  const handleNavClick = (link) => {
+    setIsOpen(false);
+    if (link.href !== `${window.location.pathname}${window.location.hash}`) return;
+
+    requestAnimationFrame(() => {
+      document.getElementById(link.href.split("#")[1])?.scrollIntoView({
+        behavior: reduceMotion ? "instant" : "smooth",
+      });
+    });
+  };
+
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 w-full ">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <nav className="site-navbar" aria-label="Primary navigation">
+      <div className="navbar-inner">
         
         {/* NAME */}
-        <Link to="/">
+        <Link
+          to="/"
+          className="navbar-brand"
+          aria-label="Ryan Tacaisan home"
+          onClick={() => setIsOpen(false)}
+        >
           <div 
             ref={nameRef}
             onMouseEnter={handleScramble}
@@ -70,12 +115,13 @@ const Navbar = () => {
         </Link>
 
         {/* DESKTOP NAV */}
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="navbar-links">
           {NAV_LINKS.map((link) => (
             <Link 
               key={link.name}
               to={link.href}
-              className="text-xs font-mono tracking-[0.2em] text-white/50 hover:text-white transition-colors duration-500"
+              onClick={() => handleNavClick(link)}
+              className="nav-link"
             >
               {link.name}
             </Link>
@@ -83,37 +129,41 @@ const Navbar = () => {
         </div>
 
         {/* MOBILE VERSION BUTTON */}
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden text-white p-2 focus:outline-none"
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={() => setIsOpen((open) => !open)}
+          className="navbar-toggle"
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isOpen}
+          aria-controls="mobile-navigation"
         >
-          <div className="w-6 h-0.5 bg-white mb-1.5"></div>
-          <div className="w-6 h-0.5 bg-white mb-1.5"></div>
-          <div className="w-6 h-0.5 bg-white"></div>
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
         </button>
       </div>
 
       {/* MOBILE MENU DROPDOWN */}
-      {isOpen && (
-        <motion.div
-          className="md:hidden flex flex-col items-center py-6 space-y-6 animate-in slide-in-from-top duration-300"
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          style={{ maxHeight: "100vh" }}
-          transition={{ duration: 1 }}
-        >
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.name}
-              to={link.href}
-              onClick={() => setIsOpen(false)}
-              className="text-sm font-mono tracking-widest text-white/70 hover:text-white"
-            >
-              {link.name}
-            </Link>
-          ))}
-        </motion.div>
-      )}
+      <Motion.div
+        id="mobile-navigation"
+        className="navbar-mobile-menu"
+        hidden={!isOpen}
+        initial={false}
+        animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : -8 }}
+        transition={{ duration: reduceMotion ? 0 : 0.2 }}
+      >
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.name}
+            to={link.href}
+            onClick={() => handleNavClick(link)}
+            className="nav-link"
+          >
+            {link.name}
+          </Link>
+        ))}
+      </Motion.div>
     </nav>
   );
 };
