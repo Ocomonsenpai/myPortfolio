@@ -135,10 +135,6 @@ const About = () => {
             </div>
           </div>
 
-          <span className="tag tag-tl">(ABOUT.)</span>
-          <span className="tag tag-tr">[ N.002 ]</span>
-          <span className="tag tag-bl">——</span>
-
           <button
             type="button"
             className="about-btn"

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Contact from '../sections/Contact';
 
 const AboutMePage = () => {
@@ -30,9 +31,22 @@ const AboutMePage = () => {
 
     return (
         <main className="aboutPage">
-            <div className="back-btn">
-                <a href="/#about">&lt; back</a>
-            </div>
+            <Link to="/#about" className="back-btn" aria-label="Back to home">
+                <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d="M19 12H5m6 6-6-6 6-6" />
+                </svg>
+                <span>Back</span>
+            </Link>
 
             <section className="aboutTop">
                 <div className="aboutTop_container">

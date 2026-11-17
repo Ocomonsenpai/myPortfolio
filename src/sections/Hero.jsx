@@ -109,7 +109,7 @@ const Hero = ({ introReady = true }) => {
       });
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const resizeRenderer = () => {
       const w = container.clientWidth || window.innerWidth;

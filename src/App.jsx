@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./sections/Navbar";
 import Hero from "./sections/Hero";
@@ -34,6 +34,7 @@ function HomePage({ introReady }) {
 function App() {
   const [introPhase, setIntroPhase] = useState("loader");
   const { pathname, hash } = useLocation();
+  const previousPathRef = useRef(pathname);
   const introActive = introPhase !== "ready";
   const showFlight = introPhase === "handoff" || introPhase === "flight" || introPhase === "reveal";
   const showLoader = introPhase === "loader" || introPhase === "handoff";
@@ -62,11 +63,18 @@ function App() {
     }
     const el = document.getElementById(id);
     if (el) {
+      // Coming from another page: jump straight there instead of sliding past the whole home page.
+      const cameFromOtherPage = previousPathRef.current !== pathname;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       requestAnimationFrame(() =>
-        el.scrollIntoView({ behavior: "smooth" })
+        el.scrollIntoView({ behavior: cameFromOtherPage || reduceMotion ? "instant" : "smooth" })
       );
     }
   }, [pathname, hash, introPhase]);
+
+  useEffect(() => {
+    previousPathRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     const stopCursor = initCursorAnimation();
