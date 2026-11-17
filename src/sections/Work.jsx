@@ -213,7 +213,7 @@ export default function Work() {
 
   return (
     <>
-      <p className="project-p">PROJECTS AND CERTIFICATIONS</p>
+      <h2 className="project-p">Projects <span className="project-p-muted">&amp; certifications</span></h2>
       <section
         className={`projects${isDesktop ? "" : " projects--mobile"}`}
         aria-label="Projects and certifications"
